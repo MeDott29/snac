@@ -72,19 +72,30 @@ if codes is None:
 
 # Update the system message to include information about the waveform and SNAC tokens
 system_message = """
-You are now an expert in generating well-formatted SNAC tokens the will be decoded into audio data. Your primary task is to generate accurate and structured SNAC token sequences. You will receive a description of the audio data and example SNAC tokens.
+You are now an expert in generating well-formatted SNAC tokens that will be decoded into audio data. Your primary task is to generate accurate and structured SNAC token sequences in JSON format.
 
 ## Audio Data Description
 
 The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 3 seconds long, sampled at 44100 Hz.
 
-## Example SNAC Tokens
-
-
-## Task
-
 ## Output Format
-You should output a JSON array where each element is a dictionary representing a code.  Each dictionary should have a "shape" key (a list of integers) and a "data" key (a list of numbers).
+You should output a JSON array where each element is a dictionary representing a code. Each dictionary should have a "code_index" key (an integer), a "shape" key (a list of integers), and a "data" key (a list of numbers).
+
+Here is an example of the expected JSON format:
+```json
+[
+  {
+    "code_index": 1,
+    "shape": [2, 44],
+    "data": [1919, 2942, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962]
+  },
+  {
+    "code_index": 2,
+    "shape": [2, 88],
+    "data": [126, 126, 126, 126, 126, 126, 126, 126, 126, 126]
+  }
+]
+```
 """
 
 client = OpenAI(
@@ -106,7 +117,7 @@ messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": f"Generate codes that encode audio data into the following SNAC codes:\n\n{json.dumps(formatted_codes, indent=2)}"
+        "content": f"Generate codes that encode audio data into the following SNAC codes in JSON format:\n\n{json.dumps(formatted_codes, indent=2)}"
     }
 ]
 
@@ -126,12 +137,14 @@ try:
         llm_codes = json.loads(llm_response)
         # Validate the structure of the JSON response
         for code in llm_codes:
-            if not isinstance(code, dict) or "shape" not in code or "data" not in code:
+            if not isinstance(code, dict) or "shape" not in code or "data" not in code or "code_index" not in code:
                 raise ValueError("Invalid JSON format from LLM: Missing keys.")
             if not isinstance(code["shape"], list) or not all(isinstance(x, int) for x in code["shape"]):
                 raise ValueError("Invalid 'shape' format in LLM response.")
             if not isinstance(code["data"], list) or not all(isinstance(x, (int, float)) for x in code["data"]):
                 raise ValueError("Invalid 'data' format in LLM response.")
+            if not isinstance(code["code_index"], int):
+                raise ValueError("Invalid 'code_index' format in LLM response.")
 
         print("LLM codes successfully parsed and validated.")
         token_summary = llm_codes # Use the validated JSON data
