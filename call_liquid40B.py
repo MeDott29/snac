@@ -4,7 +4,7 @@ import torch
 from snac import SNAC
 import re
 
-# Generate simple waveforms
+# Generate simple waveforms - this part remains unchanged for now, but the output is used differently
 sample_rate = 44100  # Sample rate in Hz
 duration = 5  # Duration of audio in seconds
 num_samples = sample_rate * duration
@@ -29,37 +29,37 @@ else:
     device = torch.device("cpu")
     print("CUDA not available, using CPU.")
 
-# Load the SNAC model
-model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
+# Load the SNAC model (this part is not used in this modified version)
+#model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
 
-# Encode the audio data
-with torch.inference_mode():
-    codes = model.encode(audio_data.to(device))
+# Encode the audio data (this part is not used in this modified version)
+#with torch.inference_mode():
+#    codes = model.encode(audio_data.to(device))
 
 # Placeholder for dynamic token summary - will be updated after LLM response
 token_summary = ""
 
-# Add the system message here
+# Add the system message here -  Modified to describe the audio, not provide code
 system_message = """
-You are now an expert in generating well-formatted SNAC tokens for audio data. Your primary task is to assist the user by providing accurate and structured token sequences.  You will receive a summary of the token generation process, not the raw tokens themselves due to size limitations.
+You are now an expert in generating well-formatted SNAC tokens for audio data. Your primary task is to assist the user by providing accurate and structured token sequences.  You will receive a description of the audio data.
 
 ## SNAC Token Generation
 
 Your role is to generate SNAC tokens based on the provided audio data. Here's a detailed breakdown of the process:
 
-1. Audio Input: The user will provide audio data, typically in the form of a waveform or spectrogram.
+1. Audio Input: The user will provide a description of the audio data.  The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 5 seconds long, sampled at 44100 Hz.
 
-2. Tokenization Process: Analyze the audio signal at different temporal resolutions to create SNAC tokens, capturing both coarse and fine details.
+2. Tokenization Process:  Imagine analyzing this audio signal at different temporal resolutions to create SNAC tokens, capturing both coarse and fine details.
 
-3. Variable-Length Sequences: Organize tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
+3. Variable-Length Sequences:  Imagine organizing tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
 
-4. Output Format:  Describe the characteristics of the generated SNAC tokens, including the number of sequences and the length of the longest sequence.  Provide the number of tokens in each sequence.
+4. Output Format: Describe the characteristics of the *hypothetical* generated SNAC tokens, including the number of sequences and the length of the longest sequence. Provide the number of tokens in each sequence.  Assume a reasonable tokenization process.
 
 ## Formatting Guidelines
 
 - Describe the number of sequences generated.
 - Indicate the length of the longest sequence.
-- Provide a concise summary of the token generation process, including the number of tokens in each sequence.  Use a structured format like this:
+- Provide a concise summary of the *hypothetical* token generation process, including the number of tokens in each sequence. Use a structured format like this:
   ```
   Summary of Generated SNAC Tokens:
   Sequence 1: <number of tokens> tokens
@@ -69,7 +69,7 @@ Your role is to generate SNAC tokens based on the provided audio data. Here's a 
   Longest Sequence: <number of tokens> tokens
   ```
 
-Focus on delivering accurate and properly formatted SNAC tokens.
+Focus on delivering accurate and properly formatted SNAC tokens based on the provided audio data description.
 """
 
 client = OpenAI(
@@ -82,7 +82,7 @@ messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": "Generate SNAC tokens for the provided audio data.  Provide a summary of the generated tokens as described in the system message.",
+        "content": "Generate SNAC tokens for the described audio data.  Provide a summary of the generated tokens as described in the system message.",
     }
 ]
 
