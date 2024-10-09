@@ -119,11 +119,15 @@ try:
     print(f"LLM Response:\n{llm_response}")
 
     try:
+        # Pre-validation: Check if the response looks like valid JSON before parsing.
+        if not llm_response.strip().startswith('[') or not llm_response.strip().endswith(']'):
+            raise ValueError("LLM response does not appear to be a JSON array.")
+
         llm_codes = json.loads(llm_response)
         # Validate the structure of the JSON response
         for code in llm_codes:
             if not isinstance(code, dict) or "shape" not in code or "data" not in code:
-                raise ValueError("Invalid JSON format from LLM.")
+                raise ValueError("Invalid JSON format from LLM: Missing keys.")
             if not isinstance(code["shape"], list) or not all(isinstance(x, int) for x in code["shape"]):
                 raise ValueError("Invalid 'shape' format in LLM response.")
             if not isinstance(code["data"], list) or not all(isinstance(x, (int, float)) for x in code["data"]):
@@ -132,11 +136,14 @@ try:
         print("LLM codes successfully parsed and validated.")
         token_summary = llm_codes # Use the validated JSON data
 
-    except json.JSONDecodeError:
-        print("Error: Invalid JSON response from LLM.")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON response from LLM: {e}")
         token_summary = None
     except ValueError as e:
-        print(f"Error: {e}")
+        print(f"Error validating LLM response: {e}")
+        token_summary = None
+    except Exception as e:
+        print(f"An unexpected error occurred during LLM response processing: {e}")
         token_summary = None
 
 except OpenAIError as e:
