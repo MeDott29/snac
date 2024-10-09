@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 from os import getenv
 import torch
 from snac import SNAC
@@ -24,8 +24,8 @@ model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
 with torch.inference_mode():
     codes = model.encode(audio_data.to(device))
 
-# Summarize SNAC tokens for LLM
-token_summary = f"Generated {len(codes)} sequences of SNAC tokens.  Sequence lengths vary, with the longest sequence having {max(len(code) for code in codes)} tokens."
+# Placeholder for dynamic token summary - will be updated after LLM response
+token_summary = ""
 
 
 # Add the system message here
@@ -42,13 +42,21 @@ Your role is to generate SNAC tokens based on the provided audio data. Here's a 
 
 3. Variable-Length Sequences: Organize tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
 
-4. Output Format:  Describe the characteristics of the generated SNAC tokens, including the number of sequences and the length of the longest sequence.
+4. Output Format:  Describe the characteristics of the generated SNAC tokens, including the number of sequences and the length of the longest sequence.  Provide the number of tokens in each sequence.
 
 ## Formatting Guidelines
 
 - Describe the number of sequences generated.
 - Indicate the length of the longest sequence.
-- Provide a concise summary of the token generation process.
+- Provide a concise summary of the token generation process, including the number of tokens in each sequence.  Use a structured format like this:
+  ```
+  Summary of Generated SNAC Tokens:
+  Sequence 1: <number of tokens> tokens
+  Sequence 2: <number of tokens> tokens
+  ...
+  Sequence N: <number of tokens> tokens
+  Longest Sequence: <number of tokens> tokens
+  ```
 
 Focus on delivering accurate and properly formatted SNAC tokens.
 """
@@ -63,21 +71,46 @@ messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": "Here's an example of a summary of properly formatted SNAC tokens generated from audio ",
-    },
-    {
-        "role": "assistant",
-        "content": token_summary,
-    },
-    {
-        "role": "user",
         "content": "Generate SNAC tokens for the provided audio data.  Provide a summary of the generated tokens as described in the system message.",
     }
 ]
 
-completion = client.chat.completions.create(
-    model="liquid/lfm-40b",
-    messages=messages,
-)
+try:
+    completion = client.chat.completions.create(
+        model="liquid/lfm-40b",
+        messages=messages,
+    )
+    llm_response = completion.choices[0].message.content
+    print(f"LLM Response:\n{llm_response}") #Added for debugging
 
-print(completion.choices[0].message.content)
+    #Extract relevant information from LLM response (this part needs refinement based on the actual LLM output format)
+    #This is a placeholder and needs to be adapted to your LLM's response structure.
+    num_sequences = 0
+    longest_sequence = 0
+    sequence_lengths = []
+    lines = llm_response.strip().split('\n')
+    for line in lines:
+        if "Sequence" in line and ":" in line:
+            parts = line.split(":")
+            try:
+                num_tokens = int(parts[1].strip().split()[0])
+                sequence_lengths.append(num_tokens)
+            except (ValueError, IndexError):
+                print(f"Warning: Could not parse sequence length from line: {line}")
+        elif "Longest Sequence" in line and ":" in line:
+            parts = line.split(":")
+            try:
+                longest_sequence = int(parts[1].strip().split()[0])
+            except (ValueError, IndexError):
+                print(f"Warning: Could not parse longest sequence length from line: {line}")
+
+    num_sequences = len(sequence_lengths)
+    token_summary = f"Generated {num_sequences} sequences of SNAC tokens. Sequence lengths: {sequence_lengths}. Longest sequence: {longest_sequence} tokens."
+
+except OpenAIError as e:
+    print(f"OpenAI API Error: {e}")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+
+
+print(token_summary)
