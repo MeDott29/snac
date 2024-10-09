@@ -45,7 +45,7 @@ client = OpenAI(
 )
 
 try:
-    completion = client.chat.completions.create(
+    response = client.chat.completions.create(
       model="liquid/lfm-40b",
       messages=[
         {
@@ -53,9 +53,15 @@ try:
           "content": f"Here are some SNAC codes representing a sine wave (truncated to {len(flat_codes)} tokens for model compatibility): {codes_str}\n\nThese codes represent a single sine wave.  Can you generate additional SNAC codes that, when combined with these, create a richer, more complex soundscape?  Focus on creating a musically pleasing and coherent result by considering the patterns and relationships within the provided data.  The output should be a JSON array of numerical values representing the additional SNAC codes."
         }
       ],
-      response_format={"type": "json_object"}
+      response_format={"type": "json_object"},
+      stream=True
     )
-    print(json.dumps(completion.choices[0].message.content, indent=2)) #Print formatted JSON
+
+    for chunk in response:
+        if chunk.choices[0].delta.content:
+            print(chunk.choices[0].delta.content, end="", flush=True)
+    print() #Add a newline at the end
+
 except Exception as e:
     logging.exception(f"An error occurred during the API call: {e}")
     exit(1)
