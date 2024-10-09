@@ -67,13 +67,9 @@ if codes is None:
         print(f"Error encoding audio  {e}")
         exit(1)
 
-
-# Placeholder for dynamic token summary - will be updated after LLM response
-token_summary = ""
-
 # Update the system message to include information about the waveform and SNAC tokens
 system_message = """
-You are now an expert in generating well-formatted SNAC token descriptions for audio data. Your primary task is to assist the user by providing accurate and structured descriptions of SNAC token sequences. You will receive a description of the audio data and example SNAC tokens.
+You are now an expert in generating well-formatted SNAC tokens the will be decoded into audio data. Your primary task is to generate accurate and structured SNAC token sequences. You will receive a description of the audio data and example SNAC tokens.
 
 ## Audio Data Description
 
@@ -81,23 +77,10 @@ The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, b
 
 ## Example SNAC Tokens
 
-The following represents a *hypothetical* example of SNAC tokens generated for this audio.  The actual token counts and values will vary depending on the model and audio content.  These are for illustrative purposes only.
-
-```
-Generated SNAC tokens:
-Sequence 1 (3 seconds Interval): 150 tokens
-Sequence 2 (1.5 seconds Interval): 300 tokens
-Sequence 3 (0.75 seconds Interval): 600 tokens
-Longest Sequence: 600 tokens
-```
 
 ## Task
 
-Your role is to emulate a description of the audio content that these *hypothetical* SNAC tokens would represent.  Imagine you are translating the SNAC tokens back into human-readable language, capturing the essence of the audio in a way that is both informative and engaging.  Focus on the characteristics of the sine and square waves, their frequencies, and their combined effect.
-
 ## Output Format
-
-Provide a narrative description of the audio content, focusing on the key elements that the SNAC tokens are likely to capture. Ensure your description is clear, coherent, and follows a logical flow.  Do not simply repeat the information from the audio description.
 """
 
 client = OpenAI(
