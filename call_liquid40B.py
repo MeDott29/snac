@@ -2,6 +2,7 @@ from openai import OpenAI, OpenAIError
 from os import getenv
 import torch
 from snac import SNAC
+import re
 
 # Generate a sample audio waveform
 sample_rate = 44100  # Sample rate in Hz
@@ -83,29 +84,16 @@ try:
     llm_response = completion.choices[0].message.content
     print(f"LLM Response:\n{llm_response}") #Added for debugging
 
-    #Extract relevant information from LLM response (this part needs refinement based on the actual LLM output format)
-    #This is a placeholder and needs to be adapted to your LLM's response structure.
-    num_sequences = 0
-    longest_sequence = 0
+    # Extract relevant information from LLM response using regular expressions
     sequence_lengths = []
-    lines = llm_response.strip().split('\n')
-    for line in lines:
-        if "Sequence" in line and ":" in line:
-            parts = line.split(":")
-            try:
-                num_tokens = int(parts[1].strip().split()[0])
-                sequence_lengths.append(num_tokens)
-            except (ValueError, IndexError):
-                print(f"Warning: Could not parse sequence length from line: {line}")
-        elif "Longest Sequence" in line and ":" in line:
-            parts = line.split(":")
-            try:
-                longest_sequence = int(parts[1].strip().split()[0])
-            except (ValueError, IndexError):
-                print(f"Warning: Could not parse longest sequence length from line: {line}")
-
-    num_sequences = len(sequence_lengths)
-    token_summary = f"Generated {num_sequences} sequences of SNAC tokens. Sequence lengths: {sequence_lengths}. Longest sequence: {longest_sequence} tokens."
+    matches = re.findall(r"Sequence\s*\d+\s*:\s*(\d+)\s*tokens", llm_response)
+    if matches:
+        sequence_lengths = [int(match) for match in matches]
+        num_sequences = len(sequence_lengths)
+        longest_sequence = max(sequence_lengths)
+        token_summary = f"Generated {num_sequences} sequences of SNAC tokens. Sequence lengths: {sequence_lengths}. Longest sequence: {longest_sequence} tokens."
+    else:
+        token_summary = "Could not extract sequence information from LLM response."
 
 except OpenAIError as e:
     print(f"OpenAI API Error: {e}")
