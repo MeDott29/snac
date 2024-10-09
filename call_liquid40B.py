@@ -71,32 +71,33 @@ if codes is None:
 # Placeholder for dynamic token summary - will be updated after LLM response
 token_summary = ""
 
-# Update the system message to include information about the waveform
+# Update the system message to include information about the waveform and SNAC tokens
 system_message = """
-You are now an expert in generating well-formatted SNAC token descriptions for audio data. Your primary task is to assist the user by providing accurate and structured descriptions of SNAC token sequences. You will receive a description of the audio data, and your role is to describe the SNAC tokens that would be generated for this audio.
+You are now an expert in generating well-formatted SNAC token descriptions for audio data. Your primary task is to assist the user by providing accurate and structured descriptions of SNAC token sequences. You will receive a description of the audio data and example SNAC tokens.
 
 ## Audio Data Description
 
 The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 3 seconds long, sampled at 44100 Hz.
 
-## SNAC Token Description Generation
+## Example SNAC Tokens
 
-Imagine analyzing this audio signal at different temporal resolutions to create SNAC tokens, capturing both coarse and fine details. Organize the tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
+The following represents a *hypothetical* example of SNAC tokens generated for this audio.  The actual token counts and values will vary depending on the model and audio content.  These are for illustrative purposes only.
+
+```
+Generated SNAC tokens:
+Sequence 1 (3 seconds Interval): 150 tokens
+Sequence 2 (1.5 seconds Interval): 300 tokens
+Sequence 3 (0.75 seconds Interval): 600 tokens
+Longest Sequence: 600 tokens
+```
+
+## Task
+
+Your role is to emulate a description of the audio content that these *hypothetical* SNAC tokens would represent.  Imagine you are translating the SNAC tokens back into human-readable language, capturing the essence of the audio in a way that is both informative and engaging.  Focus on the characteristics of the sine and square waves, their frequencies, and their combined effect.
 
 ## Output Format
 
-Provide a structured description of the generated SNAC tokens, including the number of sequences and the length of the longest sequence. For each sequence, specify the number of tokens it contains. Ensure your description is clear and follows a consistent format:
-
-```
-Summary of SNAC Tokens:
-Sequence 1 (Interval): <number of tokens> tokens
-Sequence 2 (Interval): <number of tokens> tokens
-...
-Sequence N (Interval): <number of tokens> tokens
-Longest Sequence: <number of tokens> tokens
-```
-
-Focus on delivering an accurate and properly formatted description of the SNAC tokens based on the provided audio data.
+Provide a narrative description of the audio content, focusing on the key elements that the SNAC tokens are likely to capture. Ensure your description is clear, coherent, and follows a logical flow.  Do not simply repeat the information from the audio description.
 """
 
 client = OpenAI(
@@ -109,7 +110,7 @@ messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": "Describe the hypothetical SNAC tokens for the described audio data. Provide a summary of the hypothetical tokens as described in the system message.",
+        "content": "Describe the audio content represented by the example SNAC tokens.",
     }
 ]
 
@@ -121,17 +122,8 @@ try:
     llm_response = completion.choices[0].message.content
     print(f"LLM Response:\n{llm_response}")
 
-    # Extract relevant information from LLM response using regular expressions
-    sequence_lengths = []
-    # More robust regex to handle variations in LLM response format
-    matches = re.findall(r"(\d+)\s*tokens", llm_response)
-    if matches:
-        sequence_lengths = [int(length) for length in matches]
-        num_sequences = len(sequence_lengths)
-        longest_sequence = max(sequence_lengths) if sequence_lengths else 0
-        token_summary = f"Generated {num_sequences} sequences of SNAC tokens. Sequence lengths: {sequence_lengths}. Longest sequence: {longest_sequence} tokens."
-    else:
-        token_summary = "Could not extract sequence information from LLM response."
+    # Extract relevant information from LLM response using regular expressions (This part is not needed anymore)
+    token_summary = llm_response
 
 except OpenAIError as e:
     print(f"OpenAI API Error: {e}")
