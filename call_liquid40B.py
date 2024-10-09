@@ -5,6 +5,10 @@ from snac import SNAC
 import re
 import pickle
 import json
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Generate simple waveforms
 sample_rate = 44100  # Sample rate in Hz
@@ -28,13 +32,13 @@ if torch.cuda.is_available():
     device = torch.device("cuda")
 else:
     device = torch.device("cpu")
-    print("CUDA not available, using CPU.")
+    logging.warning("CUDA not available, using CPU.")
 
 # Load the SNAC model
 try:
     model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
 except Exception as e:
-    print(f"Error loading SNAC model: {e}")
+    logging.error(f"Error loading SNAC model: {e}")
     exit(1)
 
 
@@ -46,9 +50,9 @@ if path.exists(cache_file):
     try:
         with open(cache_file, "rb") as file:
             codes = pickle.load(file)
-        print("Loaded cached SNAC codes.")
+        logging.info("Loaded cached SNAC codes.")
     except Exception as e:
-        print(f"Error loading cached SNAC codes: {e}. Regenerating codes.")
+        logging.warning(f"Error loading cached SNAC codes: {e}. Regenerating codes.")
         codes = None
 else:
     codes = None
@@ -58,16 +62,16 @@ if codes is None:
     try:
         with torch.inference_mode():
             codes = model.encode(audio_data.to(device))
-        print("Generated SNAC codes:")  # Print header
+        logging.info("Generated SNAC codes:")  # Print header
         for i, code in enumerate(codes):
-            print(f"  Code {i+1} shape: {code.shape}, first 10 values: {code[0, :10].tolist()}")
+            logging.info(f"  Code {i+1} shape: {code.shape}, first 20 values: {code[0, :20].tolist()}")
 
         # Cache the generated codes
         with open(cache_file, "wb") as file:
             pickle.dump(codes, file)
-        print("Cached SNAC codes for future use.")
+        logging.info("Cached SNAC codes for future use.")
     except Exception as e:
-        print(f"Error encoding audio: {e}")
+        logging.error(f"Error encoding audio: {e}")
         exit(1)
 
 # Update the system message to include information about the waveform and SNAC tokens
@@ -76,7 +80,7 @@ You are now an expert in generating well-formatted SNAC tokens that will be deco
 
 ## Audio Data Description
 
-The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 3 seconds long, sampled at 44100 Hz.
+The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 3 seconds long, sampled at 44100 Hz.  The SNAC encoder has produced codes at multiple resolutions.
 
 ## Output Format
 You should output a JSON array where each element is a dictionary representing a code. Each dictionary should have a "code_index" key (an integer), a "shape" key (a list of integers), and a "data" key (a list of numbers).
@@ -87,12 +91,22 @@ Here is an example of the expected JSON format:
   {
     "code_index": 1,
     "shape": [2, 44],
-    "data": [1919, 2942, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962]
+    "data": [1919, 2942, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962, 1962]
   },
   {
     "code_index": 2,
     "shape": [2, 88],
-    "data": [126, 126, 126, 126, 126, 126, 126, 126, 126, 126]
+    "data": [126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126, 126]
+  },
+  {
+    "code_index": 3,
+    "shape": [2, 176],
+    "data": [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
+  },
+  {
+    "code_index": 4,
+    "shape": [2, 352],
+    "data": [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
   }
 ]
 ```
@@ -109,7 +123,7 @@ for i, code in enumerate(codes):
     formatted_codes.append({
         "code_index": i + 1,
         "shape": list(code.shape),
-        "data": code[0, :10].tolist() # Only sending a subset of the data for brevity.
+        "data": code[0, :20].tolist() # Sending more data for better context.
     })
 
 # Display SNAC codes to the LLM
@@ -128,7 +142,7 @@ try:
         timeout=60  # Set a timeout of 60 seconds
     )
     llm_response = completion.choices[0].message.content
-    print(f"LLM Response:\n{llm_response}")
+    logging.info(f"LLM Response:\n{llm_response}")
 
     try:
         # Pre-validation: Check if the response looks like valid JSON before parsing.
@@ -147,22 +161,22 @@ try:
             if not isinstance(code["code_index"], int):
                 raise ValueError("Invalid 'code_index' format in LLM response.")
 
-        print("LLM codes successfully parsed and validated.")
+        logging.info("LLM codes successfully parsed and validated.")
         token_summary = llm_codes # Use the validated JSON data
 
     except json.JSONDecodeError as e:
-        print(f"Error decoding JSON response from LLM: {e}")
+        logging.error(f"Error decoding JSON response from LLM: {e}")
         token_summary = None
     except ValueError as e:
-        print(f"Error validating LLM response: {e}")
+        logging.error(f"Error validating LLM response: {e}")
         token_summary = None
     except Exception as e:
-        print(f"An unexpected error occurred during LLM response processing: {e}")
+        logging.exception(f"An unexpected error occurred during LLM response processing: {e}")
         token_summary = None
 
 except OpenAIError as e:
-    print(f"OpenAI API Error: {e}")
+    logging.error(f"OpenAI API Error: {e}")
 except Exception as e:
-    print(f"An unexpected error occurred: {e}")
+    logging.exception(f"An unexpected error occurred: {e}")
 
 print(token_summary)
