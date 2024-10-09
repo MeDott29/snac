@@ -123,9 +123,10 @@ try:
 
     # Extract relevant information from LLM response using regular expressions
     sequence_lengths = []
-    matches = re.findall(r"Sequence\s*(\d+)\s*\((.*?)\s*Interval\):\s*(.*?)\s*tokens", llm_response, re.IGNORECASE)
+    # More robust regex to handle variations in LLM response format
+    matches = re.findall(r"(\d+)\s*tokens", llm_response)
     if matches:
-        sequence_lengths = [int(length) for num, _, length in matches]
+        sequence_lengths = [int(length) for length in matches]
         num_sequences = len(sequence_lengths)
         longest_sequence = max(sequence_lengths) if sequence_lengths else 0
         token_summary = f"Generated {num_sequences} sequences of SNAC tokens. Sequence lengths: {sequence_lengths}. Longest sequence: {longest_sequence} tokens."
