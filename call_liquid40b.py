@@ -42,7 +42,7 @@ if len(flat_codes) > max_tokens:
 # Convert the (potentially truncated) flat codes list to a string representation
 codes_str = " ".join(map(str, flat_codes))
 
-# gets API Key from environment variable OPENAI_API_KEY
+# gets API Key from environment variable OPENROUTER_API_KEY
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
   api_key=getenv("OPENROUTER_API_KEY"),
