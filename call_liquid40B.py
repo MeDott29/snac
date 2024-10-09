@@ -4,6 +4,7 @@ import torch
 from snac import SNAC
 import re
 import pickle
+import json
 
 # Generate simple waveforms
 sample_rate = 44100  # Sample rate in Hz
@@ -81,6 +82,7 @@ The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, b
 ## Task
 
 ## Output Format
+You should output a JSON array where each element is a dictionary representing a code.  Each dictionary should have a "shape" key (a list of integers) and a "data" key (a list of numbers).
 """
 
 client = OpenAI(
@@ -88,18 +90,21 @@ client = OpenAI(
     api_key=getenv("OPENROUTER_API_KEY"),
 )
 
-# Format SNAC codes for display
-formatted_codes = ""
+# Format SNAC codes for display.  This is now structured for easier JSON parsing by the LLM.
+formatted_codes = []
 for i, code in enumerate(codes):
-    formatted_codes += f"Code {i+1}:\nShape: {code.shape}\nFirst 10 values: {code[0, :10].tolist()}\n\n"
-
+    formatted_codes.append({
+        "code_index": i + 1,
+        "shape": list(code.shape),
+        "data": code[0, :10].tolist() # Only sending a subset of the data for brevity.
+    })
 
 # Display SNAC codes to the LLM
 messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": f"Generate codes that encode audio data into the following SNAC codes:\n\n{formatted_codes}"
+        "content": f"Generate codes that encode audio data into the following SNAC codes:\n\n{json.dumps(formatted_codes, indent=2)}"
     }
 ]
 
@@ -111,8 +116,26 @@ try:
     llm_response = completion.choices[0].message.content
     print(f"LLM Response:\n{llm_response}")
 
-    # Extract relevant information from LLM response using regular expressions (This part is not needed anymore)
-    token_summary = llm_response
+    try:
+        llm_codes = json.loads(llm_response)
+        # Validate the structure of the JSON response
+        for code in llm_codes:
+            if not isinstance(code, dict) or "shape" not in code or "data" not in code:
+                raise ValueError("Invalid JSON format from LLM.")
+            if not isinstance(code["shape"], list) or not all(isinstance(x, int) for x in code["shape"]):
+                raise ValueError("Invalid 'shape' format in LLM response.")
+            if not isinstance(code["data"], list) or not all(isinstance(x, (int, float)) for x in code["data"]):
+                raise ValueError("Invalid 'data' format in LLM response.")
+
+        print("LLM codes successfully parsed and validated.")
+        token_summary = llm_codes # Use the validated JSON data
+
+    except json.JSONDecodeError:
+        print("Error: Invalid JSON response from LLM.")
+        token_summary = None
+    except ValueError as e:
+        print(f"Error: {e}")
+        token_summary = None
 
 except OpenAIError as e:
     print(f"OpenAI API Error: {e}")
