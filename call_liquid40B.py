@@ -89,10 +89,10 @@ Provide a structured description of the generated SNAC tokens, including the num
 
 ```
 Summary of SNAC Tokens:
-Sequence 1: <number of tokens> tokens
-Sequence 2: <number of tokens> tokens
+Sequence 1 (Interval): <number of tokens> tokens
+Sequence 2 (Interval): <number of tokens> tokens
 ...
-Sequence N: <number of tokens> tokens
+Sequence N (Interval): <number of tokens> tokens
 Longest Sequence: <number of tokens> tokens
 ```
 
@@ -123,9 +123,9 @@ try:
 
     # Extract relevant information from LLM response using regular expressions
     sequence_lengths = []
-    matches = re.findall(r"Sequence\s*\d+\s*:\s*(\d+)\s*tokens", llm_response, re.IGNORECASE)
+    matches = re.findall(r"Sequence\s*(\d+)\s*\((.*?)\s*Interval\):\s*(.*?)\s*tokens", llm_response, re.IGNORECASE)
     if matches:
-        sequence_lengths = [int(length) for length in matches]
+        sequence_lengths = [int(length) for num, _, length in matches]
         num_sequences = len(sequence_lengths)
         longest_sequence = max(sequence_lengths) if sequence_lengths else 0
         token_summary = f"Generated {num_sequences} sequences of SNAC tokens. Sequence lengths: {sequence_lengths}. Longest sequence: {longest_sequence} tokens."
