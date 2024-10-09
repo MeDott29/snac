@@ -27,12 +27,12 @@ square_wave = square_wave.unsqueeze(0).unsqueeze(0)  # Added to ensure correct s
 # Stack the waveforms for processing
 audio_data = torch.cat([sine_wave, square_wave], dim=0)
 
-# Check if CUDA is available
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-else:
-    device = torch.device("cpu")
-    logging.warning("CUDA not available, using CPU.")
+# Check if CUDA is available and move data to device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+audio_data = audio_data.to(device)
+if device.type == "cpu":
+    logging.warning("CUDA not available, using CPU. This may significantly slow down processing.")
+
 
 # Load the SNAC model
 try:
@@ -45,23 +45,22 @@ except Exception as e:
 # Cache file for storing generated codes
 cache_file = "snac_codes.pkl"
 
-# Check if cached codes exist
-if path.exists(cache_file):
-    try:
-        with open(cache_file, "rb") as file:
-            codes = pickle.load(file)
-        logging.info("Loaded cached SNAC codes.")
-    except Exception as e:
-        logging.warning(f"Error loading cached SNAC codes: {e}. Regenerating codes.")
-        codes = None
-else:
-    codes = None
+# Check if cached codes exist and load them
+codes = None
+try:
+    with open(cache_file, "rb") as file:
+        codes = pickle.load(file)
+    logging.info("Loaded cached SNAC codes.")
+except (FileNotFoundError, EOFError, pickle.UnpicklingError) as e:
+    logging.warning(f"Could not load cached SNAC codes: {e}. Regenerating codes.")
+except Exception as e:
+    logging.exception(f"An unexpected error occurred while loading cached SNAC codes: {e}")
 
 # Encode the audio data if not cached
 if codes is None:
     try:
         with torch.inference_mode():
-            codes = model.encode(audio_data.to(device))
+            codes = model.encode(audio_data)
         logging.info("Generated SNAC codes:")  # Print header
         for i, code in enumerate(codes):
             logging.info(f"  Code {i+1} shape: {code.shape}, first 20 values: {code[0, :20].tolist()}")

@@ -16,13 +16,11 @@ sine_wave = torch.sin(2 * torch.pi * 440 * time).unsqueeze(0).unsqueeze(0)
 audio_data = sine_wave
 
 
-# Check if CUDA is available
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-    audio_data = audio_data.to(device)
-else:
-    device = torch.device("cpu")
-    logging.warning("CUDA not available, using CPU.")
+# Check if CUDA is available and move data to device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+audio_data = audio_data.to(device)
+if device.type == "cpu":
+    logging.warning("CUDA not available, using CPU. This may significantly slow down processing.")
 
 # Load the SNAC model
 try:
