@@ -7,21 +7,22 @@ import os
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Check if CUDA is available
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-else:
-    device = torch.device("cpu")
-    logging.warning("CUDA not available, using CPU.")
-
 # Placeholder audio data (replace with your actual audio)
 sample_rate = 44100
 duration = 3
 num_samples = sample_rate * duration
 time = torch.linspace(0, duration, num_samples)
 sine_wave = torch.sin(2 * torch.pi * 440 * time).unsqueeze(0).unsqueeze(0)
-audio_data = sine_wave.to(device)
+audio_data = sine_wave
 
+
+# Check if CUDA is available
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+    audio_data = audio_data.to(device)
+else:
+    device = torch.device("cpu")
+    logging.warning("CUDA not available, using CPU.")
 
 # Load the SNAC model
 try:
@@ -69,4 +70,3 @@ if codes is None:
         exit(1)
 
 print("SNAC code generation complete.")
-
