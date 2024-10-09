@@ -4,11 +4,23 @@ import torch
 from snac import SNAC
 import re
 
-# Generate a sample audio waveform
+# Generate simple waveforms
 sample_rate = 44100  # Sample rate in Hz
 duration = 5  # Duration of audio in seconds
 num_samples = sample_rate * duration
-audio_data = torch.rand(1, 1, num_samples)
+
+# Sine wave
+time = torch.linspace(0, duration, num_samples)
+sine_wave = torch.sin(2 * torch.pi * 440 * time)  # Frequency of 440 Hz
+sine_wave = sine_wave.unsqueeze(0).unsqueeze(0) #Added to ensure correct shape
+
+# Square wave
+square_wave = torch.where(torch.sin(2 * torch.pi * 220 * time) > 0, 1, -1)  # Frequency of 220 Hz
+square_wave = square_wave.unsqueeze(0).unsqueeze(0) #Added to ensure correct shape
+
+# Stack the waveforms for processing
+audio_data = torch.cat([sine_wave, square_wave], dim=0)
+
 
 # Check if CUDA is available
 if torch.cuda.is_available():
@@ -16,7 +28,6 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
     print("CUDA not available, using CPU.")
-
 
 # Load the SNAC model
 model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
@@ -27,7 +38,6 @@ with torch.inference_mode():
 
 # Placeholder for dynamic token summary - will be updated after LLM response
 token_summary = ""
-
 
 # Add the system message here
 system_message = """
