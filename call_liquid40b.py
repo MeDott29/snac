@@ -1,5 +1,5 @@
 import pickle
-from openai import OpenAI
+from openai import OpenAI, APIError, APIConnectionError, RateLimitError
 from os import getenv
 import logging
 import json
@@ -58,10 +58,24 @@ try:
     )
 
     for chunk in response:
-        if chunk.choices[0].delta.content:
-            print(chunk.choices[0].delta.content, end="", flush=True)
+        try:
+            if chunk.choices[0].delta.content:
+                print(chunk.choices[0].delta.content, end="", flush=True)
+        except (AttributeError, IndexError) as e:
+            logging.error(f"Malformed response chunk received: {e}.  Skipping chunk.")
+
     print() #Add a newline at the end
 
-except Exception as e:
-    logging.exception(f"An error occurred during the API call: {e}")
+except APIError as e:
+    logging.error(f"OpenAI API error: {e}")
     exit(1)
+except APIConnectionError as e:
+    logging.error(f"OpenAI API connection error: {e}. Check your internet connection.")
+    exit(1)
+except RateLimitError as e:
+    logging.error(f"OpenAI API rate limit exceeded: {e}. Try again later.")
+    exit(1)
+except Exception as e:
+    logging.exception(f"An unexpected error occurred: {e}")
+    exit(1)
+
