@@ -4,7 +4,7 @@ import torch
 from snac import SNAC
 import re
 
-# Generate simple waveforms - this part remains unchanged for now, but the output is used differently
+# Generate simple waveforms
 sample_rate = 44100  # Sample rate in Hz
 duration = 5  # Duration of audio in seconds
 num_samples = sample_rate * duration
@@ -28,31 +28,34 @@ else:
     device = torch.device("cpu")
     print("CUDA not available, using CPU.")
 
-# Load the SNAC model (this part is not used in this modified version)
-# model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
+# Load the SNAC model
+model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
 
-# Encode the audio data (this part is not used in this modified version)
-# with torch.inference_mode():
-#     codes = model.encode(audio_data.to(device))
+# Encode the audio data
+with torch.inference_mode():
+    codes = model.encode(audio_data.to(device))
+    print("Generated SNAC codes:", codes)  # Print the generated codes
 
 # Placeholder for dynamic token summary - will be updated after LLM response
 token_summary = ""
 
-# Add the system message here - Modified to describe the audio, not provide code
+# Update the system message to include information about the waveform
 system_message = """
 You are now an expert in generating well-formatted SNAC token descriptions for audio data. Your primary task is to assist the user by providing accurate and structured descriptions of hypothetical SNAC token sequences. You will receive a description of the audio data.
 
+## Audio Data Description
+
+The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 5 seconds long, sampled at 44100 Hz.
+
 ## SNAC Token Description Generation
 
-Your role is to describe what SNAC tokens for the provided audio data *would* look like.  You will *not* generate fake tokens. Here's a detailed breakdown of the process:
+Your role is to describe what SNAC tokens for the provided audio data *would* look like. You will *not* generate fake tokens. Instead, you will provide a structured description of the hypothetical tokenization process and the resulting tokens. Here's a detailed breakdown of the process:
 
-1. Audio Input: The user will provide a description of the audio data. The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 5 seconds long, sampled at 44100 Hz.
+1. Hypothetical Tokenization Process: Imagine analyzing this audio signal at different temporal resolutions to create SNAC tokens, capturing both coarse and fine details.
 
-2. Hypothetical Tokenization Process: Imagine analyzing this audio signal at different temporal resolutions to create SNAC tokens, capturing both coarse and fine details.
+2. Variable-Length Sequences: Imagine organizing tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
 
-3. Variable-Length Sequences: Imagine organizing tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
-
-4. Output Format: Describe the characteristics of the *hypothetical* generated SNAC tokens, including the number of sequences and the length of the longest sequence. Provide the number of tokens in each sequence.  Assume a reasonable tokenization process.
+3. Output Format: Describe the characteristics of the *hypothetical* generated SNAC tokens, including the number of sequences and the length of the longest sequence. Provide the number of tokens in each sequence. Assume a reasonable tokenization process.
 
 ## Formatting Guidelines
 
