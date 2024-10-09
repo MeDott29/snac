@@ -24,15 +24,7 @@ except Exception as e:
 flat_codes = [value for code in codes for value in code[0].tolist()]
 
 # Get model's maximum token limit (if possible, otherwise use a default)
-max_tokens = 2000  # Default value
-try:
-    # Attempt to get the model's token limit (this part might require adjustments depending on the OpenAI API)
-    # This section remains commented out as it requires specific API calls not provided.
-    # response = client.models.retrieve(id="liquid/lfm-40b")
-    # max_tokens = response.max_tokens
-    # logging.info(f"Retrieved max_tokens from model: {max_tokens}")
-except Exception as e:
-    logging.warning(f"Could not retrieve max_tokens from model: {e}. Using default value of {max_tokens}.")
+max_tokens = 32000  # Default value
 
 
 # Check for excessively long code lists and truncate if necessary
