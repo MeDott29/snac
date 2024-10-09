@@ -33,16 +33,4 @@ completion = client.chat.completions.create(
   model="liquid/lfm-40b",
   messages=[
     {"role": "system", "content": system_message},
-user_prompt = """Generate SNAC codes for an audio sample with the following waveforms: 
-[{'freq': 440, 'waveform_type': 'sine', 'amplitude': 0.8}, 
- {'freq': 880, 'waveform_type': 'square', 'amplitude': 0.6}]
-
-Remember, SNAC codes should be a list of integer arrays. Each array represents a different temporal scale. 
-Don't explain the process, just provide the codes in the format shown in the examples."""
-
-# Update the messages in the API call
-messages=[
-    {"role": "system", "content": system_message},
-    {"role": "user", "content": user_prompt}
-]
 print(completion.choices[0].message.content)
