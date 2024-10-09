@@ -99,7 +99,7 @@ messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": f"Describe the audio content represented by the following SNAC codes:\n\n{formatted_codes}"
+        "content": f"Generate codes that encode audio data into the following SNAC codes:\n\n{formatted_codes}"
     }
 ]
 
