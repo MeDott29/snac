@@ -2,6 +2,7 @@ import pickle
 from openai import OpenAI
 from os import getenv
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
@@ -12,7 +13,10 @@ try:
         codes = pickle.load(f)
     logging.info("SNAC codes loaded from cache.")
 except (FileNotFoundError, EOFError, pickle.UnpicklingError) as e:
-    logging.error(f"Error loading SNAC codes from cache: {e}")
+    logging.error(f"Error loading SNAC codes from cache: {e}.  Check that snac_codes.pkl exists and is a valid pickle file.")
+    exit(1)
+except Exception as e:
+    logging.exception(f"An unexpected error occurred while loading the SNAC codes: {e}")
     exit(1)
 
 
@@ -23,7 +27,7 @@ flat_codes = [value for code in codes for value in code[0].tolist()]
 max_tokens = 2000  # Default value
 try:
     # Attempt to get the model's token limit (this part might require adjustments depending on the OpenAI API)
-    #  This section is commented out because it requires specific API calls that are not provided in the prompt.
+    # This section remains commented out as it requires specific API calls not provided.
     # response = client.models.retrieve(id="liquid/lfm-40b")
     # max_tokens = response.max_tokens
     # logging.info(f"Retrieved max_tokens from model: {max_tokens}")
@@ -54,12 +58,13 @@ try:
       messages=[
         {
           "role": "user",
-          "content": f"Here are some SNAC codes for a sine wave (truncated to {len(flat_codes)} for model compatibility): {codes_str}\n\nCan you create codes that layer in another wave, treating these codes like a book that you understand?  Focus on the patterns and relationships within the provided data to generate a coherent and musically pleasing result."
+          "content": f"Here are some SNAC codes representing a sine wave (truncated to {len(flat_codes)} tokens for model compatibility): {codes_str}\n\nThese codes represent a single sine wave.  Can you generate additional SNAC codes that, when combined with these, create a richer, more complex soundscape?  Focus on creating a musically pleasing and coherent result by considering the patterns and relationships within the provided data.  The output should be a JSON array of numerical values representing the additional SNAC codes."
         }
-      ]
+      ],
+      response_format={"type": "json_object"}
     )
-    print(completion.choices[0].message.content)
+    print(json.dumps(completion.choices[0].message.content, indent=2)) #Print formatted JSON
 except Exception as e:
-    logging.error(f"An error occurred during the API call: {e}")
+    logging.exception(f"An error occurred during the API call: {e}")
     exit(1)
 
