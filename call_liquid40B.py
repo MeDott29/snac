@@ -41,7 +41,7 @@ token_summary = ""
 
 # Update the system message to include information about the waveform
 system_message = """
-You are now an expert in generating well-formatted SNAC token descriptions for audio data. Your primary task is to assist the user by providing accurate and structured descriptions of hypothetical SNAC token sequences. You will receive a description of the audio data.
+You are now an expert in generating well-formatted SNAC token descriptions for audio data. Your primary task is to assist the user by providing accurate and structured descriptions of SNAC token sequences. You will receive a description of the audio data, and your role is to describe the SNAC tokens that would be generated for this audio.
 
 ## Audio Data Description
 
@@ -49,29 +49,22 @@ The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, b
 
 ## SNAC Token Description Generation
 
-Your role is to describe what SNAC tokens for the provided audio data *would* look like. You will *not* generate fake tokens. Instead, you will provide a structured description of the hypothetical tokenization process and the resulting tokens. Here's a detailed breakdown of the process:
+Imagine analyzing this audio signal at different temporal resolutions to create SNAC tokens, capturing both coarse and fine details. Organize the tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
 
-1. Hypothetical Tokenization Process: Imagine analyzing this audio signal at different temporal resolutions to create SNAC tokens, capturing both coarse and fine details.
+## Output Format
 
-2. Variable-Length Sequences: Imagine organizing tokens into sequences of variable lengths, where each sequence corresponds to a specific temporal resolution.
+Provide a structured description of the generated SNAC tokens, including the number of sequences and the length of the longest sequence. For each sequence, specify the number of tokens it contains. Ensure your description is clear and follows a consistent format:
 
-3. Output Format: Describe the characteristics of the *hypothetical* generated SNAC tokens, including the number of sequences and the length of the longest sequence. Provide the number of tokens in each sequence. Assume a reasonable tokenization process.
+```
+Summary of SNAC Tokens:
+Sequence 1: <number of tokens> tokens
+Sequence 2: <number of tokens> tokens
+...
+Sequence N: <number of tokens> tokens
+Longest Sequence: <number of tokens> tokens
+```
 
-## Formatting Guidelines
-
-- Describe the number of sequences generated.
-- Indicate the length of the longest sequence.
-- Provide a concise summary of the *hypothetical* token generation process, including the number of tokens in each sequence. Use a structured format like this:
-  ```
-  Summary of Hypothetical SNAC Tokens:
-  Sequence 1: <number of tokens> tokens
-  Sequence 2: <number of tokens> tokens
-  ...
-  Sequence N: <number of tokens> tokens
-  Longest Sequence: <number of tokens> tokens
-  ```
-
-Focus on delivering accurate and properly formatted descriptions of hypothetical SNAC tokens based on the provided audio data description.
+Focus on delivering an accurate and properly formatted description of the SNAC tokens based on the provided audio data.
 """
 
 client = OpenAI(
