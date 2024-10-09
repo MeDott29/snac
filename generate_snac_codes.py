@@ -15,7 +15,6 @@ time = torch.linspace(0, duration, num_samples)
 sine_wave = torch.sin(2 * torch.pi * 440 * time).unsqueeze(0).unsqueeze(0)
 audio_data = sine_wave
 
-
 # Check if CUDA is available and move data to device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 audio_data = audio_data.to(device)
@@ -38,7 +37,7 @@ if os.path.exists(cache_file):
         with open(cache_file, "rb") as file:
             codes = pickle.load(file)
         logging.info("Loaded cached SNAC codes.")
-    except (EOFError, pickle.UnpicklingError) as e:  # More specific exception handling
+    except (EOFError, pickle.UnpicklingError) as e:
         logging.warning(f"Error loading cached SNAC codes: {e}. Regenerating codes.")
         codes = None
     except Exception as e:
@@ -50,21 +49,22 @@ else:
 # Encode the audio data if not cached
 if codes is None:
     try:
-        with torch.no_grad(): # More efficient than torch.inference_mode()
+        with torch.no_grad():
             codes = model.encode(audio_data)
         logging.info("Generated SNAC codes:")
         for i, code in enumerate(codes):
-            logging.info(f"  Code {i+1} shape: {code.shape}, first 20 values: {code[0, :20].tolist()}")
+            logging.info(f"Code {i+1}: shape={code.shape}, first 20 values={code[0, :20].tolist()}") #Improved logging format
 
         # Cache the generated codes
         with open(cache_file, "wb") as file:
             pickle.dump(codes, file)
         logging.info("Cached SNAC codes for future use.")
-    except RuntimeError as e: # Catch CUDA errors specifically
+    except RuntimeError as e:
         logging.error(f"CUDA error during encoding: {e}. Check your CUDA setup.")
         exit(1)
     except Exception as e:
         logging.exception(f"An unexpected error occurred during encoding: {e}")
         exit(1)
 
-print("SNAC code generation complete.")
+logging.info("SNAC code generation complete.")
+
