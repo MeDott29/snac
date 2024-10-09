@@ -58,14 +58,16 @@ if codes is None:
     try:
         with torch.inference_mode():
             codes = model.encode(audio_data.to(device))
-        print("Generated SNAC codes:", codes)  # Print the generated codes
+        print("Generated SNAC codes:")  # Print header
+        for i, code in enumerate(codes):
+            print(f"  Code {i+1} shape: {code.shape}, first 10 values: {code[0, :10].tolist()}")
 
         # Cache the generated codes
         with open(cache_file, "wb") as file:
             pickle.dump(codes, file)
         print("Cached SNAC codes for future use.")
     except Exception as e:
-        print(f"Error encoding audio  {e}")
+        print(f"Error encoding audio: {e}")
         exit(1)
 
 # Update the system message to include information about the waveform and SNAC tokens
