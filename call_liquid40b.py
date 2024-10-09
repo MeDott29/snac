@@ -67,4 +67,3 @@ try:
 except Exception as e:
     logging.exception(f"An error occurred during the API call: {e}")
     exit(1)
-
