@@ -1,12 +1,13 @@
 from openai import OpenAI, OpenAIError
-from os import getenv
+from os import getenv, path
 import torch
 from snac import SNAC
 import re
+import pickle
 
 # Generate simple waveforms
 sample_rate = 44100  # Sample rate in Hz
-duration = 5  # Duration of audio in seconds
+duration = 3  # Updated duration of audio to 3 seconds
 num_samples = sample_rate * duration
 
 # Sine wave
@@ -29,12 +30,43 @@ else:
     print("CUDA not available, using CPU.")
 
 # Load the SNAC model
-model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
+try:
+    model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
+except Exception as e:
+    print(f"Error loading SNAC model: {e}")
+    exit(1)
 
-# Encode the audio data
-with torch.inference_mode():
-    codes = model.encode(audio_data.to(device))
-    print("Generated SNAC codes:", codes)  # Print the generated codes
+
+# Cache file for storing generated codes
+cache_file = "snac_codes.pkl"
+
+# Check if cached codes exist
+if path.exists(cache_file):
+    try:
+        with open(cache_file, "rb") as file:
+            codes = pickle.load(file)
+        print("Loaded cached SNAC codes.")
+    except Exception as e:
+        print(f"Error loading cached SNAC codes: {e}. Regenerating codes.")
+        codes = None
+else:
+    codes = None
+
+# Encode the audio data if not cached
+if codes is None:
+    try:
+        with torch.inference_mode():
+            codes = model.encode(audio_data.to(device))
+        print("Generated SNAC codes:", codes)  # Print the generated codes
+
+        # Cache the generated codes
+        with open(cache_file, "wb") as file:
+            pickle.dump(codes, file)
+        print("Cached SNAC codes for future use.")
+    except Exception as e:
+        print(f"Error encoding audio  {e}")
+        exit(1)
+
 
 # Placeholder for dynamic token summary - will be updated after LLM response
 token_summary = ""
@@ -45,7 +77,7 @@ You are now an expert in generating well-formatted SNAC token descriptions for a
 
 ## Audio Data Description
 
-The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 5 seconds long, sampled at 44100 Hz.
+The audio consists of two channels: a 440Hz sine wave and a 220Hz square wave, both 3 seconds long, sampled at 44100 Hz.
 
 ## SNAC Token Description Generation
 
@@ -87,15 +119,15 @@ try:
         messages=messages,
     )
     llm_response = completion.choices[0].message.content
-    print(f"LLM Response:\n{llm_response}")  # Added for debugging
+    print(f"LLM Response:\n{llm_response}")
 
     # Extract relevant information from LLM response using regular expressions
     sequence_lengths = []
-    matches = re.findall(r"Sequence\s*(\d+)\s*:\s*(.*?)\s*tokens", llm_response) #This line has been modified
+    matches = re.findall(r"Sequence\s*(\d+)\s*:\s*(.*?)\s*tokens", llm_response)
     if matches:
         sequence_lengths = [int(length) for num, length in matches]  # Extract sequence lengths
         num_sequences = len(sequence_lengths)
-        longest_sequence = max(sequence_lengths)
+        longest_sequence = max(sequence_lengths) if sequence_lengths else 0
         token_summary = f"Generated {num_sequences} sequences of SNAC tokens. Sequence lengths: {sequence_lengths}. Longest sequence: {longest_sequence} tokens."
     else:
         token_summary = "Could not extract sequence information from LLM response."
@@ -104,6 +136,5 @@ except OpenAIError as e:
     print(f"OpenAI API Error: {e}")
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
-
 
 print(token_summary)
