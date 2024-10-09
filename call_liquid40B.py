@@ -88,12 +88,18 @@ client = OpenAI(
     api_key=getenv("OPENROUTER_API_KEY"),
 )
 
-# Display SNAC tokens to the LLM
+# Format SNAC codes for display
+formatted_codes = ""
+for i, code in enumerate(codes):
+    formatted_codes += f"Code {i+1}:\nShape: {code.shape}\nFirst 10 values: {code[0, :10].tolist()}\n\n"
+
+
+# Display SNAC codes to the LLM
 messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": "Describe the audio content represented by the example SNAC tokens.",
+        "content": f"Describe the audio content represented by the following SNAC codes:\n\n{formatted_codes}"
     }
 ]
 
