@@ -9,12 +9,20 @@ duration = 5  # Duration of audio in seconds
 num_samples = sample_rate * duration
 audio_data = torch.rand(1, 1, num_samples)
 
+# Check if CUDA is available
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+    print("CUDA not available, using CPU.")
+
+
 # Load the SNAC model
-model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().cuda()
+model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
 
 # Encode the audio data
 with torch.inference_mode():
-    codes = model.encode(audio_data.cuda())
+    codes = model.encode(audio_data.to(device))
 
 # Summarize SNAC tokens for LLM
 token_summary = f"Generated {len(codes)} sequences of SNAC tokens.  Sequence lengths vary, with the longest sequence having {max(len(code) for code in codes)} tokens."
