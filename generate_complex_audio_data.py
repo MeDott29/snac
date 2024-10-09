@@ -23,8 +23,9 @@ def generate_complex_audio(duration, sample_rate, waveforms):
     return complex_audio / len(waveforms)  # Normalize
 
 def encode_with_snac(audio, sample_rate):
-    model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().cuda()
-    audio_tensor = torch.tensor(audio).float().unsqueeze(0).unsqueeze(0).cuda()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
+    audio_tensor = torch.tensor(audio).float().unsqueeze(0).unsqueeze(0).to(device)
     with torch.inference_mode():
         codes = model.encode(audio_tensor)
     return [code.cpu().numpy().tolist() for code in codes]
@@ -35,7 +36,7 @@ def main():
     num_samples = 10
     data = []
 
-    for _ in tqdm(range(num_samples)):
+    for i in tqdm(range(num_samples)):
         waveforms = [
             {'freq': np.random.uniform(100, 1000), 'waveform_type': np.random.choice(['sine', 'square', 'sawtooth', 'triangle']), 'amplitude': np.random.uniform(0.5, 1.0)}
             for _ in range(np.random.randint(2, 5))
@@ -51,7 +52,7 @@ def main():
         data.append(sample_data)
         
         # Save audio as WAV for verification (optional)
-        wavfile.write(f"complex_audio_{_}.wav", sample_rate, (complex_audio * 32767).astype(np.int16))
+        wavfile.write(f"complex_audio_{i}.wav", sample_rate, (complex_audio * 32767).astype(np.int16))
 
     # Save the data to a JSON file
     with open('complex_audio_data.json', 'w') as f:
