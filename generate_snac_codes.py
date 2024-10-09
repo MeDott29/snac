@@ -3,7 +3,6 @@ from snac import SNAC
 import pickle
 import logging
 import os
-import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
@@ -22,27 +21,18 @@ audio_data = audio_data.to(device)
 if device.type == "cpu":
     logging.warning("CUDA not available, using CPU. This may significantly slow down processing.")
 
-# Load the SNAC model
-try:
-    start_time = time.time()
-    model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
-    end_time = time.time()
-    logging.info(f"SNAC model loaded in {end_time - start_time:.4f} seconds.")
-except Exception as e:
-    logging.error(f"Error loading SNAC model: {e}")
-    exit(1)
-
 # Cache file for storing generated codes
 cache_file = "snac_codes.pkl"
 
-# Check if cached codes exist
+# Check if cached codes exist and load them
 if os.path.exists(cache_file):
     try:
-        start_time = time.time()
         with open(cache_file, "rb") as file:
             codes = pickle.load(file)
-        end_time = time.time()
-        logging.info(f"Loaded cached SNAC codes in {end_time - start_time:.4f} seconds.")
+        logging.info("Loaded cached SNAC codes.")
+        # Print a summary of the cached code shapes
+        for i, code in enumerate(codes):
+            print(f"Cached Code {i+1}: shape={code.shape}")
     except (EOFError, pickle.UnpicklingError) as e:
         logging.warning(f"Error loading cached SNAC codes: {e}. Regenerating codes.")
         codes = None
@@ -52,16 +42,23 @@ if os.path.exists(cache_file):
 else:
     codes = None
 
+# Load the SNAC model if codes are not cached
+if codes is None:
+    try:
+        model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
+        logging.info("SNAC model loaded.")
+    except Exception as e:
+        logging.error(f"Error loading SNAC model: {e}")
+        exit(1)
+
 # Encode the audio data if not cached
 if codes is None:
     try:
-        start_time = time.time()
         with torch.no_grad():
             codes = model.encode(audio_data)
-        end_time = time.time()
-        logging.info(f"Generated SNAC codes in {end_time - start_time:.4f} seconds:")
+        logging.info("Generated SNAC codes:")
         for i, code in enumerate(codes):
-            logging.info(f"Code {i+1}: shape={code.shape}, first 20 values={code[0, :20].tolist()}") #Improved logging format
+            logging.info(f"Code {i+1}: shape={code.shape}, first 20 values={code[0, :20].tolist()}")
 
         # Cache the generated codes
         with open(cache_file, "wb") as file:
@@ -75,4 +72,3 @@ if codes is None:
         exit(1)
 
 logging.info("SNAC code generation complete.")
-
