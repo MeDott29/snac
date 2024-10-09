@@ -33,4 +33,7 @@ completion = client.chat.completions.create(
   model="liquid/lfm-40b",
   messages=[
     {"role": "system", "content": system_message},
+    {"role": "user", "content": "Generate SNAC codes for the following waveforms:\n" + json.dumps(audio_data[5]['waveforms'])}
+  ],
+)
 print(completion.choices[0].message.content)
