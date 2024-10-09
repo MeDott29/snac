@@ -117,7 +117,7 @@ messages = [
     {"role": "system", "content": system_message},
     {
         "role": "user",
-        "content": f"Generate codes that encode audio data into the following SNAC codes in JSON format:\n\n{json.dumps(formatted_codes, indent=2)}"
+        "content": "Please provide the SNAC codes in the exact JSON format as shown in the example. Do not include any additional explanations or steps."
     }
 ]
 
@@ -125,6 +125,7 @@ try:
     completion = client.chat.completions.create(
         model="liquid/lfm-40b",
         messages=messages,
+        timeout=60  # Set a timeout of 60 seconds
     )
     llm_response = completion.choices[0].message.content
     print(f"LLM Response:\n{llm_response}")
