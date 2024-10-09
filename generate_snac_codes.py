@@ -3,16 +3,17 @@ from snac import SNAC
 import pickle
 import logging
 import os
+import time
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
 
 # Placeholder audio data (replace with your actual audio)
 sample_rate = 44100
 duration = 3
 num_samples = sample_rate * duration
-time = torch.linspace(0, duration, num_samples)
-sine_wave = torch.sin(2 * torch.pi * 440 * time).unsqueeze(0).unsqueeze(0)
+time_axis = torch.linspace(0, duration, num_samples)
+sine_wave = torch.sin(2 * torch.pi * 440 * time_axis).unsqueeze(0).unsqueeze(0)
 audio_data = sine_wave
 
 # Check if CUDA is available and move data to device
@@ -23,7 +24,10 @@ if device.type == "cpu":
 
 # Load the SNAC model
 try:
+    start_time = time.time()
     model = SNAC.from_pretrained("hubertsiuzdak/snac_44khz").eval().to(device)
+    end_time = time.time()
+    logging.info(f"SNAC model loaded in {end_time - start_time:.4f} seconds.")
 except Exception as e:
     logging.error(f"Error loading SNAC model: {e}")
     exit(1)
@@ -34,9 +38,11 @@ cache_file = "snac_codes.pkl"
 # Check if cached codes exist
 if os.path.exists(cache_file):
     try:
+        start_time = time.time()
         with open(cache_file, "rb") as file:
             codes = pickle.load(file)
-        logging.info("Loaded cached SNAC codes.")
+        end_time = time.time()
+        logging.info(f"Loaded cached SNAC codes in {end_time - start_time:.4f} seconds.")
     except (EOFError, pickle.UnpicklingError) as e:
         logging.warning(f"Error loading cached SNAC codes: {e}. Regenerating codes.")
         codes = None
@@ -49,9 +55,11 @@ else:
 # Encode the audio data if not cached
 if codes is None:
     try:
+        start_time = time.time()
         with torch.no_grad():
             codes = model.encode(audio_data)
-        logging.info("Generated SNAC codes:")
+        end_time = time.time()
+        logging.info(f"Generated SNAC codes in {end_time - start_time:.4f} seconds:")
         for i, code in enumerate(codes):
             logging.info(f"Code {i+1}: shape={code.shape}, first 20 values={code[0, :20].tolist()}") #Improved logging format
 

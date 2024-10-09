@@ -6,9 +6,10 @@ import re
 import pickle
 import json
 import logging
+import time
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s')
 
 # Generate simple waveforms
 sample_rate = 44100  # Sample rate in Hz
@@ -48,9 +49,11 @@ cache_file = "snac_codes.pkl"
 # Check if cached codes exist and load them
 codes = None
 try:
+    start_time = time.time()
     with open(cache_file, "rb") as file:
         codes = pickle.load(file)
-    logging.info("Loaded cached SNAC codes.")
+    end_time = time.time()
+    logging.info(f"Loaded cached SNAC codes in {end_time - start_time:.4f} seconds.")
 except (FileNotFoundError, EOFError, pickle.UnpicklingError) as e:
     logging.warning(f"Could not load cached SNAC codes: {e}. Regenerating codes.")
 except Exception as e:
@@ -59,9 +62,11 @@ except Exception as e:
 # Encode the audio data if not cached
 if codes is None:
     try:
+        start_time = time.time()
         with torch.inference_mode():
             codes = model.encode(audio_data)
-        logging.info("Generated SNAC codes:")  # Print header
+        end_time = time.time()
+        logging.info(f"Generated SNAC codes in {end_time - start_time:.4f} seconds:")  # Print header
         for i, code in enumerate(codes):
             logging.info(f"  Code {i+1} shape: {code.shape}, first 20 values: {code[0, :20].tolist()}")
 
@@ -135,13 +140,15 @@ messages = [
 ]
 
 try:
+    start_time = time.time()
     completion = client.chat.completions.create(
         model="liquid/lfm-40b",
         messages=messages,
         timeout=60  # Set a timeout of 60 seconds
     )
+    end_time = time.time()
     llm_response = completion.choices[0].message.content
-    logging.info(f"LLM Response:\n{llm_response}")
+    logging.info(f"LLM Response generated in {end_time - start_time:.4f} seconds:\n{llm_response}")
 
     try:
         # Pre-validation: Check if the response looks like valid JSON before parsing.
