@@ -1,3 +1,5 @@
+from openai import OpenAI
+from os import getenv
 import torch
 from snac import SNAC
 
@@ -43,10 +45,6 @@ Your role is to generate SNAC tokens based on the provided audio data. Here's a 
 Focus on delivering accurate and properly formatted SNAC tokens.
 """
 
-# Rest of the code remains the same
-from openai import OpenAI
-from os import getenv
-
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=getenv("OPENROUTER_API_KEY"),
@@ -66,9 +64,7 @@ messages = [
     {
         "role": "user",
         "content": "Generate SNAC tokens for the provided audio data.  Provide a summary of the generated tokens as described in the system message.",
-    },
-    # Add user's audio data here
-    # {"role": "user", "content": "Audio data goes here..."},
+    }
 ]
 
 completion = client.chat.completions.create(
