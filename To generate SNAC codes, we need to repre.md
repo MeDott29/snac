@@ -24,4 +24,4 @@ For example, to represent the given waveforms:
      - Represents the sample-by-sample waveform.
      - SNAC code: [2, [522, 1043, 2677, 161, 2709, 894, 645, 28, 1776, 1556, 2756, 730, 133, 701, 417, 2005, 2047, 687, 681, 4027, 1102, 1499, 220, 1113, 536, 893, 1427, 1210, 708, 460, 2027, 4008, 2223, 1984, 1803, 856, 995, 1388, 662, 757, 2096, 4031, 594, 2150, 2602, 2187, 1324, 2820, 1276, 2645, 1922, 560, 243, 1729, 2332, 2494, 1947, 1910, 1128, 2482, 2071, 2355, 522, 408, 2095, 1150, 2065, 2758, 1907, 533, 1601, 187, 1354, 1423, 2334, 440, 1328, 1325, 1321,]]
 
-This process could be repeated for each desired temporal scale (mechanical scale 2 to mechanical scale 16). Note that these are examples and may not be the most efficient representation, but it is a starting point to understand the idea of multi-scale waveform representation.
+This process could be repeated for each desired temporal scale (mechanical scale 2 to mechanical scale 16). Note that these are examples and may not be the most efficient representation, but it is a starting point to understand the idea of multi-scale waveform representation.                              
