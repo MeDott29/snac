@@ -4,6 +4,8 @@ import soundfile as sf
 import librosa
 import numpy as np
 from transformers import Wav2Vec2Processor, Wav2Vec2Model
+import torch
+import sys
 
 # Initialize the OpenAI client
 client = OpenAI(
@@ -58,5 +60,10 @@ def evaluate_audio_analysis(file_path):
     print("Analysis Result:", analysis)
 
 # Example usage
-audio_file_path = "path_to_your_audio_file.wav"
-evaluate_audio_analysis(audio_file_path)
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python generateopenai_audio_data.py <audio_file_path>")
+        sys.exit(1)
+    audio_file_path = sys.argv[1]
+    evaluate_audio_analysis(audio_file_path)
+
