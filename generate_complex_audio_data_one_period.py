@@ -6,7 +6,7 @@ import json
 from tqdm import tqdm
 
 def generate_waveform_single_period(sample_rate, freq, waveform_type, amplitude=1.0):
-    duration = 10000 / freq  # Duration of a single period
+    duration = 10 / freq  # Duration of a single period
     t = np.linspace(0, duration, int(sample_rate * duration), False)
     if waveform_type == 'sine':
         return amplitude * np.sin(2 * np.pi * freq * t)
