@@ -21,24 +21,25 @@ def load_audio(file_path, sample_rate=16000):
 
 # Function to encode audio using a pre-trained model (e.g., Wav2Vec2)
 def encode_audio(audio, processor, model):
-    # Process audio for model input
     inputs = processor(audio, return_tensors="pt", sampling_rate=16000, padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
-    return outputs.last_hidden_state
+    # Calculate the mean across the time dimension (dimension 1)
+    audio_encoding = outputs.last_hidden_state.mean(dim=1).squeeze().tolist()
+    return audio_encoding
 
 # Function to query LFM-40B model with encoded audio
-def query_model(client, model_name, audio_encoding):
+def query_model(client, model_name, audio_encoding, sr):
     completion = client.chat.completions.create(
         model=model_name,
         messages=[
             {
                 "role": "system",
-                "content": "Analyze the following audio data."
+                "content": "Analyze the following audio data. It is encoded as the mean of activations from a Wav2Vec2 model."
             },
             {
                 "role": "user",
-                "content": f"Audio Encoding: {audio_encoding}"
+                "content": f"Audio Encoding: {audio_encoding}\nSampling Rate: {sr}"
             }
         ]
     )
@@ -55,7 +56,7 @@ def evaluate_audio_analysis(file_path):
     audio_encoding = encode_audio(audio, processor, model)
     
     # Query LFM-40B with the audio encoding for analysis
-    analysis = query_model(client, "liquid/lfm-40b", audio_encoding)
+    analysis = query_model(client, "liquid/lfm-40b", audio_encoding, sr)
     
     print("Analysis Result:", analysis)
 
