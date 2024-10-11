@@ -50,7 +50,11 @@ def query_model(client, model_name, audio_encoding, sr):
             {
                 "role": "system",
                 "content": f"""
-                Analyze the following audio data. The data includes the mean activations from a Wav2Vec2 model, a pre-trained model used for speech recognition, along with some additional audio features.  Higher Wav2Vec2 activations generally indicate stronger activation of certain learned features.  The additional features are: Zero Crossing Rate (ZCR), Spectral Centroid, and Root Mean Square Energy (RMSE).  ZCR indicates the rate of zero crossings in the audio waveform.  Spectral Centroid represents the "center of mass" of the audio spectrum.  RMSE measures the average energy of the audio signal.  The sampling rate of the original audio is also provided.  Try to interpret the data and provide insights about the potential content of the audio.  The audio might contain speech, noise, music, or other sounds.  Consider all possibilities and provide a balanced analysis.
+                Analyze the following audio data. The data includes the mean activations from a Wav2Vec2 model, a pre-trained model used for speech recognition, along with some    
+ additional audio features.  Higher Wav2Vec2 activations generally indicate stronger activation of certain learned features.  The additional features are: Zero Crossing Rate (ZCR),  
+ Spectral Centroid, and Root Mean Square Energy (RMSE).  ZCR indicates the rate of zero crossings in the audio waveform.  Spectral Centroid represents the "center of mass" of the    
+ audio spectrum.  RMSE measures the average energy of the audio signal.  The sampling rate of the original audio is also provided.  Try to interpret the data and provide insights    
+ about the potential content of the audio.  The audio might contain speech, noise, music, or other sounds.  Consider all possibilities and provide a balanced analysis.   
                 """
             },
             {
