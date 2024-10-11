@@ -35,4 +35,3 @@ except Exception as e:
     print(f"Error generating or saving waveform: {e}")
     exit(1) #Exit if waveform generation fails
 
-```</source>
