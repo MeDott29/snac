@@ -24,7 +24,13 @@ def encode_audio(audio, processor, model, sr):
     inputs = processor(audio, return_tensors="pt", sampling_rate=sr, padding=True)
     with torch.no_grad():
         outputs = model(**inputs)
-    audio_encoding = outputs.last_hidden_state.mean(dim=1).squeeze().tolist()
+    last_hidden_state = outputs.last_hidden_state.squeeze()
+    
+    # Min-max scaling
+    min_val = torch.min(last_hidden_state)
+    max_val = torch.max(last_hidden_state)
+    scaled_hidden_state = (last_hidden_state - min_val) / (max_val - min_val)
+    audio_encoding = scaled_hidden_state.mean(dim=0).tolist()
 
     # Extract features using Librosa
     zcr = np.mean(librosa.feature.zero_crossing_rate(y=audio))
