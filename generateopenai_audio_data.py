@@ -35,7 +35,9 @@ def query_model(client, model_name, audio_encoding, sr):
         messages=[
             {
                 "role": "system",
-                "content": "Analyze the following audio data. It is encoded as the mean of activations from a Wav2Vec2 model."
+                "content": """
+                Analyze the following audio data.  The data represents the mean activations from a Wav2Vec2 model, a pre-trained model used for speech recognition.  These activations are derived from the internal representations of the model after processing the raw audio waveform.  Higher values generally indicate stronger activation of certain features learned by the model.  The sampling rate of the original audio is also provided.  Try to interpret the activations in the context of speech recognition and provide insights about the potential content of the audio.
+                """
             },
             {
                 "role": "user",
