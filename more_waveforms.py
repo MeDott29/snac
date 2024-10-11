@@ -5,9 +5,9 @@ import soundfile as sf
 # Generate white noise
 def generate_white_noise(duration=2, sr=32000):
     """Generates white noise."""
-    t = np.linspace(0, duration, int(sr * duration), endpoint=False)
-    noise = np.random.normal(size=t.shape)
-    return noise, sr
+    n_samples = int(sr * duration)
+    white_noise = np.random.randn(n_samples)
+    return white_noise, sr
 
 # Generate pink noise using a filter
 def generate_pink_noise(duration=2, sr=32000):
@@ -16,15 +16,12 @@ def generate_pink_noise(duration=2, sr=32000):
     white_noise = np.random.randn(n_samples)
     
     # Create a pink noise filter
-    f = np.arange(1, n_samples // 2 + 1)
-    a = 1 / (f ** 1.4)  # Pink noise spectrum
-    pink_filter = np.zeros_like(f, dtype=np.complex)
-    for i in range(len(f)):
-        pink_filter[i] = white_noise[i] * a[i]
-    
-    # Apply the filter to the white noise
-    pink_noise = np.real(np.fft.ifft(pink_filter))
-    return pink_noise[:n_samples], sr
+    f = np.fft.rfftfreq(n_samples, d=1/sr)
+    a = 1 / np.sqrt(f[1:]) # Pink noise spectrum
+    a = np.concatenate(([1], a)) # Add DC component
+    pink_noise = np.fft.irfft(np.fft.rfft(white_noise) * a)
+    return pink_noise, sr
+
 
 # Generate sine wave with varying amplitudes
 def generate_varying_amplitude_sine_wave(duration=2, sr=32000):
