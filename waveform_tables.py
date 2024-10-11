@@ -7,7 +7,7 @@ sr = 32000  # Sample rate
 duration = 1  # Duration in seconds
 t = np.linspace(0, duration, int(sr * duration), endpoint=False)
 
-# Generate waveforms
+# Generate waveforms using scipy.signal for accurate shapes
 waveforms = {
     "sawtooth": signal.sawtooth(2 * np.pi * 100 * t),
     "square": signal.square(2 * np.pi * 100 * t),
