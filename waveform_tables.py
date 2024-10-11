@@ -19,10 +19,11 @@ waveforms = {
 fig, axs = plt.subplots(2, 2, figsize=(10, 10))
 
 for i, (name, waveform) in enumerate(waveforms.items()):
-    axs[i // 2, i % 2].plot(t, waveform)
+    axs[i // 2, i % 2].plot(t, waveform, label=name)
     axs[i // 2, i % 2].set_title(name)
     axs[i // 2, i % 2].set_xlabel("Time (s)")
     axs[i // 2, i % 2].set_ylabel("Amplitude")
+    axs[i // 2, i % 2].legend() #Added legend
 
 plt.tight_layout()
 plt.show()
